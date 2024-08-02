@@ -4,6 +4,9 @@ import requests
 import json
 from websocket_server import WebsocketServer
 
+slug = requests.get("https://api.github.com/repos/ultimaker/cura/contents/resources/definitions")
+printers = json.dumps([printer['name'].replace('.def.json', '') for printer in slug.json()])
+
 def new_client(client, server):
     print("New STL Slicer Called")
 
@@ -17,7 +20,7 @@ def message_received(client, server, message):
                 f.write(content)
             subprocess.call(['./cura/CuraEngine.exe',
                             'slice',
-                            *['-j', f'./cura/definitions/{printer_name}.json'],
+                            *['-j', f'./cura/definitions/{printer_name}.def.json'],
                             *['-l', './in.stl'],
                             *['-o', './out.gcode'],
                             *['-s', 'roofing_layer_count=1']])
@@ -31,9 +34,7 @@ def message_received(client, server, message):
             printer_name = content
             server.send_message(client, 'ok')
         case 'printerlist':
-            slug = requests.get("https://api.github.com/repos/ultimaker/cura/contents/resources/definitions")
-            printers = [printer['name'].replace('.def.json', '') for printer in slug.json()]
-            server.send_message(client, json.dumps(printers))
+            server.send_message(client, printers)
     
 
 server = WebsocketServer(host='127.0.0.1', port=1533, loglevel=logging.INFO)
