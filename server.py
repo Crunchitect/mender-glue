@@ -32,7 +32,7 @@ def message_received(client, server, message):
             server.send_message(client, 'ok')
         case 'printerlist':
             slug = requests.get("https://api.github.com/repos/ultimaker/cura/contents/resources/definitions")
-            printers = [printer['name'] for printer in slug.json()]
+            printers = [printer['name'].replace('.def.json', '') for printer in slug.json()]
             server.send_message(client, json.dumps(printers))
     
 
